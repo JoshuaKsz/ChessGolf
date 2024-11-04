@@ -51,7 +51,7 @@ if (move(done))
 
 // Global
 const lib = new DrawLib("my_canvas");
-
+const lib2 = new DrawLib("my_canvas2");
 
 const canvasWidth = lib.c_handler.width;
 const canvasHeight = lib.c_handler.height;
@@ -127,6 +127,15 @@ function main() {
 
 
     animasi();
+
+    const squareSize = 70; // Size of each square in pixels
+    const rows = 8;        // Number of rows (standard chessboard has 8 rows)
+    const cols = 8;        // Number of columns (standard chessboard has 8 columns)
+    const color1 = { r: 255, g: 255, b: 255 }; // White color
+    const color2 = { r: 0, g: 0, b: 0 };       // Black color
+
+    // Draw the chessboard on the canvas
+    lib2.draw_chessboard(squareSize, rows, cols, color1, color2);
 }
 
 main();
