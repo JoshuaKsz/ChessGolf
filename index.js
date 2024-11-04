@@ -2,6 +2,7 @@ import { DrawLib } from "./lib/lib.js"
 import MatrixUtility from "./lib/matrix.js"
 import VectorCalculation from "./lib/vektor.js"
 import {Papan} from "./lib/papan.js"
+import {Bola} from "./lib/bola.js"
 
 // https://www.youtube.com/watch?v=iEn0ozP-jxc&t=29s
 // https://github.com/PolyMarsDev/Twini-Golf
