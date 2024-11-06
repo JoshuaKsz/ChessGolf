@@ -2,7 +2,7 @@ import { DrawLib } from "./lib/lib.js"
 import MatrixUtility from "./lib/matrix.js"
 import VectorCalculation from "./lib/vektor.js"
 import {Papan} from "./lib/papan.js"
-import {Bola} from "./lib/bola.js"
+import { Bola } from "./lib/bola.js"
 
 // https://www.youtube.com/watch?v=iEn0ozP-jxc&t=29s
 // https://github.com/PolyMarsDev/Twini-Golf
@@ -58,20 +58,28 @@ const papan = new Papan(lib2);
 
 const canvasWidth = lib.c_handler.width;
 const canvasHeight = lib.c_handler.height;
+
+let bola = new Bola(canvasWidth/2, canvasHeight/2, 20, 0.01, {r:0, g:0, b:0, a:255}, lib);
+
+
 let warna = {r:0, g:0, b:0, a:255};
 let warnaHijau = {r:0, g:255, b:0, a:255};
 let warnaBiru = {r:0, g:0, b:255, a:255};
 
 
-let bola = {
-    x: canvasWidth/2, 
-    y: canvasHeight/2, 
-    r: 20, 
-    color: warna, 
-    speed: 5, 
-    arah: {x: 0, y: 0}, 
-    velocity: {vx: 0, vy: 0}
-};
+// let bola = {
+//     x: canvasWidth/2, 
+//     y: canvasHeight/2, 
+//     r: 20, 
+//     color: warna, 
+//     speed: 5, 
+//     arah: {x: 0, y: 0}, 
+//     velocity: {vx: 0, vy: 0}
+// };
+
+let bolaBerhenti = true;
+
+let kotak = lib.angkaRandom(0, 64);
 
 var startTime = new Date().getTime();
 function animasi() {
@@ -81,45 +89,57 @@ function animasi() {
     var deltaTime = (endTime - startTime) / 100;
     startTime = endTime;
 
-    let m = MatrixUtility.createTranslationMatrix(bola.velocity.vx, bola.velocity.vy);
+    bola.gesekanBola();
 
-    // bola.js
+    bola.stopVelocity(0.01);
+
+    bola.pantulanBola(canvasWidth, canvasHeight);
+
+    let m = MatrixUtility.createTranslationMatrix(bola.velocity.x, bola.velocity.y);
+
     let hasil = MatrixUtility.transform_titik({x: bola.x, y: bola.y}, m);
+
     bola.x = hasil.x;
     bola.y = hasil.y;
 
-    if (bola.velocity.x > 0) {
-        bola.velocity.x = bola.velocity.x - 1;
-    } else if (bola.velocity.x < 0) {
-        bola.velocity.x = bola.velocity.x + 1;
-    }
+    bola.gesekanBola();
 
-    if (bola.velocity.y > 0) {
-        bola.velocity.y = bola.velocity.y - 1;
-    } else if (bola.velocity.y < 0) {
-        bola.velocity.y = bola.velocity.y + 1;
-    }
+    bola.pantulanBola(canvasWidth, canvasHeight);
+    
+    bolaBerhenti = bola.stopVelocity(0.01);
+
     lib.ctx.clearRect(0, 0, canvasWidth, canvasHeight);
     lib.image_data = lib.ctx.getImageData(0, 0, canvasWidth, canvasHeight);
 
-    lib.lingkaranFill(bola.x, bola.y, bola.r, bola.color);
+    bola.drawKotakIndex(kotak, canvasWidth);
+    lib.lingkaranFill(bola.x, bola.y, bola.r, bola.warna);
 
     lib.Draw();
     
-    requestAnimationFrame(animasi);
+    if (!bolaBerhenti) {
+        requestAnimationFrame(animasi);
+    } else {
+        lib.ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+        lib.image_data = lib.ctx.getImageData(0, 0, canvasWidth, canvasHeight);
+    
+        kotak = lib.angkaRandom(0, 64);
+        bola.drawKotakIndex(kotak, canvasWidth);
+        lib.lingkaranFill(bola.x, bola.y, bola.r, bola.warna);
+
+        lib.Draw();
+    }
 }
 
 function main() {
     lib.c_handler.addEventListener("click", function(evt) {
         let x = evt.offsetX;
         let y = evt.offsetY;
-        console.log(y, x);
-        
-        let jarak = VectorCalculation.jarak2vector({x: bola.x, y: bola.y}, {x: x, y: y});
-
-        let arah = VectorCalculation.arah({x: x, y: y}, {x: bola.x, y: bola.y});
-        bola.arah = arah;
-        bola.velocity = arah*(jarak/4);
+        console.log(x, y);
+        bola.pukulBola(x, y)
+        if (bolaBerhenti) {
+            bolaBerhenti = false;
+            animasi();
+        }
     });
 
     document.addEventListener('click', function(event) {
@@ -128,12 +148,14 @@ function main() {
         console.log(`Mouse Position: X: ${x}, Y: ${y}`);
     });
 
+    
+    lib.lingkaranFill(bola.x, bola.y, bola.r, bola.warna);
 
-    animasi();
-
+    lib.Draw();
 
     // Draw the chessboard on the canvas
     papan.drawSemuaKotak();
+    papan.drawSemuaBidak();
     lib2.Draw();
 }
 
