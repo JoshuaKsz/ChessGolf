@@ -130,6 +130,33 @@ function animasi() {
     }
 }
 
+
+let turn = 'p';
+export function move(awal, akhir) {
+    papan.drawSemuaKotak();
+    papan.drawSemuaBidak();
+
+    papan.setSemuaBidakGerak(turn);
+    papan.gerakBidak(awal, akhir);
+
+    papan.setSemuaBidakGerakNull(turn);
+    
+    papan.drawSemuaKotak();
+    papan.drawSemuaBidak();
+
+    if (turn === 'p') {
+        turn = 'h';
+    } else {
+        turn = 'p';
+    }
+
+    lib2.Draw();
+
+}
+// debugging
+window.move = move;
+window.papan = papan;
+
 function main() {
     lib.c_handler.addEventListener("click", function(evt) {
         let x = evt.offsetX;
