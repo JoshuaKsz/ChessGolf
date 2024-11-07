@@ -61,6 +61,8 @@ const canvasHeight = lib.c_handler.height;
 
 let bola = new Bola(canvasWidth/2, canvasHeight/2, 20, 0.01, {r:0, g:0, b:0, a:255}, lib);
 
+let turn = 'p';
+
 
 let warna = {r:0, g:0, b:0, a:255};
 let warnaHijau = {r:0, g:255, b:0, a:255};
@@ -77,17 +79,34 @@ let warnaBiru = {r:0, g:0, b:255, a:255};
 //     velocity: {vx: 0, vy: 0}
 // };
 
+// fungsi cari kotak
+function cariKotak(strBidak) {
+    let temp = [];
+    if ('p' == strBidak) {
+        papan.bidakPutih.forEach(bidak => {
+            if (bidak.bisaGerakKe.length != 0) {
+                temp.push(bidak.lokasiIndex);
+            }
+        });
+    } else if ('h' == strBidak) {
+        papan.bidakHitam.forEach(bidak => {
+            if (bidak.bisaGerakKe.length != 0) {
+                console.log(bidak);
+                temp.push(bidak.lokasiIndex);
+            }
+        });
+    }
+    return temp;
+}
+
 let bolaBerhenti = true;
 
-let kotak = lib.angkaRandom(0, 64);
+let kotak = [];
+
+let awal = false;
 
 var startTime = new Date().getTime();
 function animasi() {
-    var endTime = new Date().getTime();
-    var seconds = (endTime - startTime) / 1000;
-
-    var deltaTime = (endTime - startTime) / 100;
-    startTime = endTime;
 
     bola.gesekanBola();
 
@@ -110,8 +129,9 @@ function animasi() {
 
     lib.ctx.clearRect(0, 0, canvasWidth, canvasHeight);
     lib.image_data = lib.ctx.getImageData(0, 0, canvasWidth, canvasHeight);
-
-    bola.drawKotakIndex(kotak, canvasWidth);
+    kotak.forEach(lokasi => {
+        bola.drawKotakIndex(lokasi, canvasWidth);
+    });
     lib.lingkaranFill(bola.x, bola.y, bola.r, bola.warna);
 
     lib.Draw();
@@ -121,61 +141,123 @@ function animasi() {
     } else {
         lib.ctx.clearRect(0, 0, canvasWidth, canvasHeight);
         lib.image_data = lib.ctx.getImageData(0, 0, canvasWidth, canvasHeight);
-    
-        kotak = lib.angkaRandom(0, 64);
-        bola.drawKotakIndex(kotak, canvasWidth);
+        if (awal) {
+            move(awal, Math.floor(bola.x/(canvasWidth/8)) + Math.floor(bola.y/(canvasHeight/8))*8);
+            papan.setSemuaBidakGerakNull(turn);
+            papan.setSemuaBidakGerak(turn);
+
+            awal = false;
+            console.log(turn);
+
+            kotak = cariKotak(turn);
+            console.log(kotak);
+
+        } else {
+            awal = Math.floor(bola.x/(canvasWidth/8)) + Math.floor(bola.y/(canvasHeight/8))*8;
+            
+        
+            if (kotak.includes(awal)) {
+                kotak = [];
+                kotak = papan.grid[awal].bisaGerakKe;
+                console.log(kotak);
+            } else {
+                awal = false;
+                kotak = [];
+                
+                if (turn == 'p') {
+                    turn = 'h';
+                } else {
+                    turn = 'p';
+                }
+                papan.setSemuaBidakGerakNull(turn);
+                papan.setSemuaBidakGerak(turn);
+
+                kotak = cariKotak(turn);
+                console.log(turn, kotak);
+            }
+        }
+        kotak.forEach(lokasi => {
+            bola.drawKotakIndex(lokasi, canvasWidth);
+        });
+
         lib.lingkaranFill(bola.x, bola.y, bola.r, bola.warna);
 
         lib.Draw();
+        console.log(kotak);
+
     }
 }
 
 
-let turn = 'p';
 export function move(awal, akhir) {
-    papan.drawSemuaKotak();
-    papan.drawSemuaBidak();
 
     papan.setSemuaBidakGerak(turn);
     papan.gerakBidak(awal, akhir);
 
     papan.setSemuaBidakGerakNull(turn);
     
-    papan.drawSemuaKotak();
-    papan.drawSemuaBidak();
+    // papan.drawSemuaKotak();
+    // papan.drawSemuaBidak();
 
-    if (turn === 'p') {
+    papan.drawKotakIndex(awal);
+    papan.drawKotakIndex(akhir);
+    papan.drawBidakIndex(akhir);
+
+
+    if (turn == 'p') {
         turn = 'h';
     } else {
         turn = 'p';
     }
 
-    lib2.Draw();
+    // lib.ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+    // lib.image_data = lib.ctx.getImageData(0, 0, canvasWidth, canvasHeight);
 
+
+
+    lib.Draw();
+    lib2.Draw();
 }
 // debugging
 window.move = move;
 window.papan = papan;
 
+
 function main() {
+    const slider = document.getElementById('volume');
+    papan.setSemuaBidakGerak(turn);
+
+    kotak = [];
+    if (turn == 'p') {
+        papan.bidakPutih.forEach(bidak => {
+            if (bidak.bisaGerakKe.length != 0) {
+                kotak.push(bidak.lokasiIndex);
+            }
+        });
+    } else if (turn == 'h') {
+        papan.bidakHitam.forEach(bidak => {
+            if (bidak.bisaGerakKe.length != 0) {
+                kotak.push(bidak.lokasiIndex);
+            }
+        });
+    }
+
     lib.c_handler.addEventListener("click", function(evt) {
         let x = evt.offsetX;
         let y = evt.offsetY;
         console.log(x, y);
-        bola.pukulBola(x, y)
-        if (bolaBerhenti) {
+        if (bolaBerhenti) { 
+            let pukul = slider.max - slider.value+1;
+            bola.pukulBola(x, y, pukul);
+            console.log("sadadsads",pukul);
             bolaBerhenti = false;
             animasi();
         }
     });
 
-    document.addEventListener('click', function(event) {
-        const x = event.clientX;
-        const y = event.clientY;
-        console.log(`Mouse Position: X: ${x}, Y: ${y}`);
+    kotak.forEach(lokasi => {
+        bola.drawKotakIndex(lokasi, canvasWidth);
     });
-
-    
     lib.lingkaranFill(bola.x, bola.y, bola.r, bola.warna);
 
     lib.Draw();
