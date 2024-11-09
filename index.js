@@ -141,7 +141,7 @@ function animasi() {
     } else {
         lib.ctx.clearRect(0, 0, canvasWidth, canvasHeight);
         lib.image_data = lib.ctx.getImageData(0, 0, canvasWidth, canvasHeight);
-        if (awal) {
+        if (awal != false) {
             move(awal, Math.floor(bola.x/(canvasWidth/8)) + Math.floor(bola.y/(canvasHeight/8))*8);
             papan.setSemuaBidakGerakNull(turn);
             papan.setSemuaBidakGerak(turn);
@@ -192,7 +192,7 @@ function animasi() {
 export function move(awal, akhir) {
 
     papan.setSemuaBidakGerak(turn);
-    papan.gerakBidak(awal, akhir);
+    let berhasil = papan.gerakBidak(awal, akhir);
 
     papan.setSemuaBidakGerakNull(turn);
     
@@ -201,7 +201,11 @@ export function move(awal, akhir) {
 
     papan.drawKotakIndex(awal);
     papan.drawKotakIndex(akhir);
-    papan.drawBidakIndex(akhir);
+    if (berhasil) {
+        papan.drawBidakIndex(akhir);
+    } else {
+        papan.drawBidakIndex(awal);
+    }
 
 
     if (turn == 'p') {
@@ -218,6 +222,7 @@ export function move(awal, akhir) {
     lib.Draw();
     lib2.Draw();
 }
+// How to use the function in console developer mode
 // debugging
 window.move = move;
 window.papan = papan;
@@ -227,20 +232,7 @@ function main() {
     const slider = document.getElementById('volume');
     papan.setSemuaBidakGerak(turn);
 
-    kotak = [];
-    if (turn == 'p') {
-        papan.bidakPutih.forEach(bidak => {
-            if (bidak.bisaGerakKe.length != 0) {
-                kotak.push(bidak.lokasiIndex);
-            }
-        });
-    } else if (turn == 'h') {
-        papan.bidakHitam.forEach(bidak => {
-            if (bidak.bisaGerakKe.length != 0) {
-                kotak.push(bidak.lokasiIndex);
-            }
-        });
-    }
+    kotak = cariKotak(turn);
 
     lib.c_handler.addEventListener("click", function(evt) {
         let x = evt.offsetX;
